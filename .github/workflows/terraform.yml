@@ -1,4 +1,4 @@
-name: Terraform Lint, Test, and Deploy
+name: terraform-plan-and-apply-production
 
 on:
     push:
@@ -8,9 +8,58 @@ on:
         paths:
             - "terraform/**"
 
+defaults:
+    run:
+        working-directory: ./
+
+env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
+    pytest:
+        name: Execute pytest for lambda function
+        if: ${{ github.event_name == 'pull_request' }}
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.9"
+
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install pipenv
+                  pipenv lock
+                  pipenv sync --dev
+
+            - name: Set up Node
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 18
+
+            - name: Install dependencies for node
+              run: |
+                  yarn install --frozen-lockfile
+
+            - name: Exec pytest
+              run: |
+                  pipenv run test
+
+            - name: Pytest coverage comment
+              if: always()
+              uses: MishaKav/pytest-coverage-comment@main
+              with:
+                  pytest-coverage-path: ./pytest-coverage.txt
+                  junitxml-path: ./pytest.xml
+
     terraform:
-        name: Terraform Lint, Test, and Deploy
+        name: Confirm terraform plan
+        if: ${{ ! failure() }}
+        needs: pytest
         runs-on: ubuntu-latest
 
         permissions:
@@ -20,31 +69,64 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v3
               with:
-                  terraform_version: 1.5.3
+                  ref: ${{ github.event.pull_request.head.ref }}
 
-            - name: Run tflint
+            - name: Set env
+              if: ${{ github.base_ref == 'main' || github.ref == 'refs/heads/main' }}
               run: |
-                  sudo apt-get update && sudo apt-get install -y tflint
-                  tflint --config ./terraform/.tflint.hcl ./terraform/
+                  echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
+                  echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
+                  echo "TERRAFORM_DIR=./terraform" >> $GITHUB_ENV
+
+            - name: configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ap-northeast-3
+
+            - uses: aquaproj/aqua-installer@v3.0.1
+              with:
+                  aqua_version: v2.28.0
+
+            - name: Hide comment
+              id: hide-comment
+              run: github-comment hide
+
+            - name: Terraform Init
+              id: init
+              run: terraform init -reconfigure
+              working-directory: ./terraform
+
+            - name: Cache plugin dir
+              uses: actions/cache@v3
+              with:
+                  path: ~/.tflint.d/plugins
+                  key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+
+            - name: Init TFLint
+              run: tflint --init -c ./terraform/.tflint.hcl
 
             - name: Run terraform fmt
               run: terraform fmt -recursive -check ./terraform/
 
-            - name: Terraform Init
-              run: terraform init
-              working-directory: ./terraform
+            - name: Run TFLint
+              run: tflint --recursive -c $(realpath ./terraform/.tflint.hcl) -f compact
 
-            - name: Terraform Plan
-              run: terraform plan
+            - name: Terraform plan
+              id: plan
+              run: tfcmt plan -patch -- terraform plan -no-color -input=false
               working-directory: ./terraform
+              continue-on-error: true
 
-            - name: Terraform Apply
-              if: github.ref == 'refs/heads/main'
-              run: terraform apply -auto-approve
+            - name: Terraform plan status
+              if: steps.plan.outcome == 'failure'
+              run: exit 1
+
+            - name: Terraform apply
+              if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+              run: tfcmt apply -- terraform apply -auto-approve
               working-directory: ./terraform
 
             - name: Notify success
