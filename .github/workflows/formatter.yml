@@ -1,4 +1,4 @@
-name: Pylint
+name: Code Formatter
 
 on:
     pull_request:
@@ -6,7 +6,6 @@ on:
 
 jobs:
     build:
-        name: Formatter
         runs-on: ubuntu-latest
         strategy:
             matrix:
@@ -16,7 +15,8 @@ jobs:
             contents: write
 
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout code
+              uses: actions/checkout@v4
               with:
                   ref: ${{ github.head_ref }}
 
@@ -30,20 +30,19 @@ jobs:
                   python -m pip install --upgrade pip
                   pip install autoflake black isort pylint
 
-            - name: autoflake
-              run: autoflake -r $(git ls-files '*.py')
+            - name: Run autoflake to remove unused imports
+              run: autoflake --remove-all-unused-imports -r $(git ls-files '*.py')
 
-            - name: black
+            - name: Format code with black
               run: black $(git ls-files '*.py')
 
-            - name: isort
+            - name: Sort imports with isort
               run: isort $(git ls-files '*.py')
 
-            - name: Analysing the code with pylint
-              run: |
-                  pylint $(git ls-files '*.py')
+            - name: Analyze code with pylint
+              run: pylint $(git ls-files '*.py')
 
-            - name: Auto Commit
+            - name: Auto Commit changes
               uses: stefanzweifel/git-auto-commit-action@v5
               with:
-                  commit_message: Apply Code Formatter
+                  commit_message: "Apply code formatting with autoflake, black, and isort"
