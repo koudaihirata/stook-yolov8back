@@ -1,5 +1,4 @@
 /.DS_Store
-/Dockerfile
 /Dockerfile.dev
 /compose.yml
 /fly.toml

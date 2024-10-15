@@ -1,3 +1,7 @@
+provider "aws" {
+    region = "ap-northeast-3"
+}
+
 resource "aws_ecr_repository" "this" {
   name                 = "flask-app-repo"
   image_tag_mutability = "MUTABLE"
