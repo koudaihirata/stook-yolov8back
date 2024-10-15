@@ -7,6 +7,13 @@ on:
   pull_request:
     paths:
       - "terraform/**"
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        required: true
+        description: ログレベル
+        default: warning
+      tags:
 
 defaults:
   run:
