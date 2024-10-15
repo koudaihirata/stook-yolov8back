@@ -1,14 +1,15 @@
 provider "aws" {
-    region = "ap-northeast-3"
+  region = "ap-northeast-3"
 }
 
 resource "aws_ecr_repository" "this" {
-  name                 = "flask-app-repo"
+  name                 = "${var.app_name}-repo"
   image_tag_mutability = "MUTABLE"
+  tags                 = var.tags
 }
 
 resource "aws_iam_role" "lambda_exec_role" {
-  name = "flask-app-lambda-role"
+  name = "${var.app_name}-lambda-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -30,17 +31,18 @@ resource "aws_iam_role_policy_attachment" "lambda_logging" {
 }
 
 resource "aws_lambda_function" "this" {
-  function_name = "flask-app-lambda"
+  function_name = "${var.app_name}-lambda"
   role          = aws_iam_role.lambda_exec_role.arn
   handler       = "index.handler"
   image_uri     = "${aws_ecr_repository.this.repository_url}:latest"
-
-  package_type = "Image"
+  package_type  = "Image"
+  tags          = var.tags
 }
 
 resource "aws_apigatewayv2_api" "this" {
-  name          = "flask-app-api"
+  name          = "${var.app_name}-api"
   protocol_type = "HTTP"
+  tags          = var.tags
 }
 
 resource "aws_apigatewayv2_integration" "lambda_integration" {
@@ -53,21 +55,20 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
 resource "aws_apigatewayv2_route" "api_route" {
   api_id    = aws_apigatewayv2_api.this.id
   route_key = "ANY /{proxy+}"
-
-  target = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 }
 
 resource "aws_apigatewayv2_stage" "api_stage" {
   api_id      = aws_apigatewayv2_api.this.id
   name        = "$default"
   auto_deploy = true
+  tags        = var.tags
 }
 
 resource "aws_iam_policy" "ecr_push_policy" {
-  name        = "ECRPushPolicy"
+  name        = "${var.app_name}-ECRPushPolicy"
   description = "Policy to allow pushing Docker images to ECR"
-
-  policy = jsonencode({
+  policy      = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
@@ -91,4 +92,5 @@ resource "aws_iam_policy" "ecr_push_policy" {
       }
     ]
   })
+  tags = var.tags
 }

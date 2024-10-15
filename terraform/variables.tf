@@ -1,7 +1,14 @@
 variable "app_name" {
-  default = "flask-app"
+  description = "Application name"
+  type        = string
+  default     = "flask-app"
 }
 
-variable "ecr_repo_name" {
-  default = "flask-app-repo"
+variable "tags" {
+  description = "Commonly used tags"
+  type        = map(string)
+  default = {
+    Environment = "development"
+    Project     = "sample"
+  }
 }

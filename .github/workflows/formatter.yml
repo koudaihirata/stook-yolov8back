@@ -1,48 +1,48 @@
 name: Code Formatter
 
 on:
-    pull_request:
-        types: [opened, synchronize]
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                python-version: ["3.9", "3.10"]
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10"]
 
-        permissions:
-            contents: write
+    permissions:
+      contents: write
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  ref: ${{ github.head_ref }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
-            - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v5
-              with:
-                  python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install autoflake black isort pylint
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install autoflake black isort pylint
 
-            - name: Run autoflake to remove unused imports
-              run: autoflake --remove-all-unused-imports -r $(git ls-files '*.py')
+      - name: Run autoflake to remove unused imports
+        run: autoflake --remove-all-unused-imports -r $(git ls-files '*.py')
 
-            - name: Format code with black
-              run: black $(git ls-files '*.py')
+      - name: Format code with black
+        run: black $(git ls-files '*.py')
 
-            - name: Sort imports with isort
-              run: isort $(git ls-files '*.py')
+      - name: Sort imports with isort
+        run: isort $(git ls-files '*.py')
 
-            - name: Analyze code with pylint
-              run: pylint $(git ls-files '*.py')
+      - name: Analyze code with pylint
+        run: pylint $(git ls-files '*.py')
 
-            - name: Auto Commit changes
-              uses: stefanzweifel/git-auto-commit-action@v5
-              with:
-                  commit_message: "Apply code formatting with autoflake, black, and isort"
+      - name: Auto Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Apply code formatting with autoflake, black, and isort"

@@ -1,118 +1,118 @@
 name: Terraform CI/CD
 
 on:
-    push:
-        paths:
-            - "terraform/**"
-    pull_request:
-        paths:
-            - "terraform/**"
+  push:
+    paths:
+      - "terraform/**"
+  pull_request:
+    paths:
+      - "terraform/**"
 
 defaults:
-    run:
-        working-directory: ./
+  run:
+    working-directory: ./
 
 env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-    terraform:
-        runs-on: ubuntu-latest
+  terraform:
+    runs-on: ubuntu-latest
 
-        strategy:
-            matrix:
-                site: ["prod"]
+    strategy:
+      matrix:
+        site: ["prod"]
 
-        permissions:
-            id-token: write
-            contents: read
-            pull-requests: write
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
 
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  ref: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
-            - name: Check Diff
-              id: diff
-              uses: technote-space/get-diff-action@v6
-              with:
-                  FILES: |
-                      ${{ matrix.site }}.lastupdate
+      - name: Check Diff
+        id: diff
+        uses: technote-space/get-diff-action@v6
+        with:
+          FILES: |
+            ${{ matrix.site }}.lastupdate
 
-            - name: AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-                  aws-region: ap-northeast-3
+      - name: AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-3
 
-            - uses: aquaproj/aqua-installer@v3.0.1
-              with:
-                  aqua_version: v2.28.0
+      - uses: aquaproj/aqua-installer@v3.0.1
+        with:
+          aqua_version: v2.28.0
 
-            - name: Hide Comment
-              id: hide-comment
-              run: github-comment hide
+      - name: Hide Comment
+        id: hide-comment
+        run: github-comment hide
 
-            - name: Terraform Init
-              id: init
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
-              run: terraform init -reconfigure -upgrade
-              working-directory: ./terraform
+      - name: Terraform Init
+        id: init
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
+        run: terraform init -reconfigure -upgrade
+        working-directory: ./terraform
 
-            - name: Terraform Fmt
-              id: fmt
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
-              run: terraform fmt -recursive -check
-              working-directory: ./terraform
+      - name: Terraform Fmt
+        id: fmt
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
+        run: terraform fmt -recursive -check
+        working-directory: ./terraform
 
-            - name: TFLint Init
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
-              run: tflint --init -c .tflint.hcl
-              working-directory: ./terraform
+      - name: TFLint Init
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
+        run: tflint --init -c .tflint.hcl
+        working-directory: ./terraform
 
-            - name: TFLint Run
-              id: tflint
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
-              run: tflint --recursive -c $(realpath ./terraform/.tflint.hcl) -f compact
-              working-directory: ./terraform
+      - name: TFLint Run
+        id: tflint
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
+        run: tflint --recursive -c $(realpath ./terraform/.tflint.hcl) -f compact
+        working-directory: ./terraform
 
-            - name: Terraform Validate
-              id: validate
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
-              run: terraform validate -no-color
-              working-directory: ./terraform
+      - name: Terraform Validate
+        id: validate
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) }}
+        run: terraform validate -no-color
+        working-directory: ./terraform
 
-            - name: Terraform Plan
-              id: plan
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.event_name == 'pull_request' }}
-              run: terraform plan -no-color -lock=false -var-file=env/${{ matrix.site }}.tfvars
-              working-directory: ./terraform
-              continue-on-error: true
+      - name: Terraform Plan
+        id: plan
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.event_name == 'pull_request' }}
+        run: terraform plan -no-color -lock=false -var-file=env/${{ matrix.site }}.tfvars
+        working-directory: ./terraform
+        continue-on-error: true
 
-            - name: Terraform Plan Status
-              if: steps.plan.outcome == 'failure'
-              run: exit 1
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
 
-            - name: Terraform Plan cmt
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.event_name == 'pull_request' }}
-              run: tfcmt plan -patch -- terraform plan -no-color -input=false -var-file=env/${{ matrix.site }}.tfvars
-              working-directory: ./terraform
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      - name: Terraform Plan cmt
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.event_name == 'pull_request' }}
+        run: tfcmt plan -patch -- terraform plan -no-color -input=false -var-file=env/${{ matrix.site }}.tfvars
+        working-directory: ./terraform
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
-            - name: Terraform Apply
-              id: plan
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.event_name == 'pull_request' }}
-              run: terraform apply -auto-approve -var-file=env/${{ matrix.site }}.tfvars
-              working-directory: ./terraform
+      - name: Terraform Apply
+        id: plan
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.ref == 'refs/heads/infra' && github.event_name == 'push' }}
+        run: terraform apply -auto-approve -var-file=env/${{ matrix.site }}.tfvars
+        working-directory: ./terraform
 
-            - name: Terraform Apply cmt
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.ref == 'refs/heads/infra' && github.event_name == 'push' }}
-              run: tfcmt apply -- terraform apply -auto-approve -var-file=env/${{ matrix.site }}.tfvars
-              working-directory: ./terraform
+      - name: Terraform Apply cmt
+        if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.ref == 'refs/heads/infra' && github.event_name == 'push' }}
+        run: tfcmt apply -- terraform apply -auto-approve -var-file=env/${{ matrix.site }}.tfvars
+        working-directory: ./terraform
 
-            - name: Notify Success
-              if: success()
-              run: echo "Terraform deployment was successful!"
+      - name: Notify Success
+        if: success()
+        run: echo "Terraform deployment was successful!"

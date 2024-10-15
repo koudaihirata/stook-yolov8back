@@ -23,4 +23,6 @@ COPY --from=builder /app /app
 
 USER nonroot
 
+EXPOSE 5001
+
 CMD ["app.py"]
