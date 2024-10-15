@@ -4,8 +4,6 @@ on:
     push:
         paths:
             - "terraform/**"
-        branches:
-            - "main"
     pull_request:
         paths:
             - "terraform/**"
@@ -111,7 +109,7 @@ jobs:
               working-directory: ./terraform
 
             - name: Terraform Apply cmt
-              if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.ref == 'refs/heads/release' && github.event_name == 'push' }}
+              if: ${{ contains(env.MATCHED_FILES, matrix.site) && github.ref == 'refs/heads/infra' && github.event_name == 'push' }}
               run: tfcmt apply -- terraform apply -auto-approve -var-file=env/${{ matrix.site }}.tfvars
               working-directory: ./terraform
 
