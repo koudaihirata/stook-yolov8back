@@ -10,10 +10,6 @@ on:
         branches:
             - feature/*
             - hotfix/*
-    workflow_run:
-        workflows: ["Build and Deploy to AWS Lambda"]
-        types:
-            - completed
 
 jobs:
     pytest:
