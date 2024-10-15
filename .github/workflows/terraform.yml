@@ -1,0 +1,52 @@
+name: Terraform Lint, Test, and Deploy
+
+on:
+    push:
+        paths:
+            - "terraform/**"
+    pull_request:
+        paths:
+            - "terraform/**"
+
+jobs:
+    terraform:
+        name: Terraform Lint, Test, and Deploy
+        runs-on: ubuntu-latest
+
+        permissions:
+            id-token: write
+            contents: read
+            pull-requests: write
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: 1.5.3
+
+            - name: Run tflint
+              run: |
+                  sudo apt-get update && sudo apt-get install -y tflint
+                  tflint --config ./terraform/.tflint.hcl ./terraform/
+
+            - name: Run terraform fmt
+              run: terraform fmt -recursive -check ./terraform/
+
+            - name: Terraform Init
+              run: terraform init
+              working-directory: ./terraform
+
+            - name: Terraform Plan
+              run: terraform plan
+              working-directory: ./terraform
+
+            - name: Terraform Apply
+              if: github.ref == 'refs/heads/main'
+              run: terraform apply -auto-approve
+              working-directory: ./terraform
+
+            - name: Notify success
+              if: success()
+              run: echo "Terraform deployment was successful!"
