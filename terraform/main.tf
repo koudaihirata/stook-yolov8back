@@ -23,11 +23,18 @@ resource "aws_iam_role" "lambda_exec_role" {
       }
     ]
   })
+
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_ecr_policy" {
+  role       = aws_iam_role.lambda_exec_role.name
+  policy_arn = aws_iam_policy.ecr_push_policy.arn
 }
 
 resource "aws_lambda_function" "this" {
@@ -65,6 +72,14 @@ resource "aws_apigatewayv2_stage" "api_stage" {
   tags        = var.tags
 }
 
+resource "aws_lambda_permission" "apigw_invoke" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.this.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.this.execution_arn}/*/*"
+}
+
 resource "aws_iam_policy" "ecr_push_policy" {
   name        = "${var.app_name}-ECRPushPolicy"
   description = "Policy to allow pushing Docker images to ECR"
@@ -78,7 +93,7 @@ resource "aws_iam_policy" "ecr_push_policy" {
           "ecr:BatchCheckLayerAvailability"
         ],
         Effect   = "Allow",
-        Resource = "*"
+        Resource = "arn:aws:ecr:ap-northeast-3:${data.aws_caller_identity.current.account_id}:repository/${aws_ecr_repository.this.name}"
       },
       {
         Action = [
@@ -88,7 +103,7 @@ resource "aws_iam_policy" "ecr_push_policy" {
           "ecr:CompleteLayerUpload"
         ],
         Effect   = "Allow",
-        Resource = "*"
+        Resource = "arn:aws:ecr:ap-northeast-3:${data.aws_caller_identity.current.account_id}:repository/${aws_ecr_repository.this.name}"
       }
     ]
   })

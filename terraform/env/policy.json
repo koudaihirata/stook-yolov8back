@@ -1,0 +1,117 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "GetAuthorizationToken",
+      "Effect": "Allow",
+      "Action": ["ecr:GetAuthorizationToken"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PushImageOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:ListImages",
+        "ecr:DescribeRepositories",
+        "ecr:ListTagsForResource",
+        "ecr:CreateRepository",
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:DeleteRepository",
+        "ecr:DeleteRepositoryPolicy",
+        "ecr:SetRepositoryPolicy"
+      ],
+      "Resource": "arn:aws:ecr:*:859261896300:repository/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionCode",
+        "lambda:InvokeFunction",
+        "lambda:DeleteFunction",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:ListFunctions"
+      ],
+      "Resource": "arn:aws:lambda:*:859261896300:function:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:GET",
+        "apigateway:POST",
+        "apigateway:PUT",
+        "apigateway:DELETE",
+        "apigateway:PATCH"
+      ],
+      "Resource": "arn:aws:apigateway:*::/restapis/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams",
+        "logs:DescribeLogGroups"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PassRole",
+        "iam:CreateOpenIDConnectProvider",
+        "iam:GetPolicy"
+      ],
+      "Resource": [
+        "arn:aws:iam::859261896300:role/*",
+        "arn:aws:iam::859261896300:policy/*",
+        "arn:aws:iam::859261896300:oidc-provider/token.actions.githubusercontent.com"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloud9:CreateEnvironmentEC2",
+        "cloud9:CreateEnvironmentMembership",
+        "cloud9:DescribeEnvironments",
+        "cloud9:DescribeEnvironmentMemberships",
+        "cloud9:UpdateEnvironment",
+        "cloud9:UpdateEnvironmentMembership",
+        "cloud9:DeleteEnvironment",
+        "cloud9:DeleteEnvironmentMembership",
+        "cloud9:TagResource",
+        "cloud9:UntagResource"
+      ],
+      "Resource": "arn:aws:cloud9:*:859261896300:environment/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:CreateTags",
+        "ec2:DeleteTags",
+        "ec2:TerminateInstances"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:DescribeSessions",
+        "ssm:ResumeSession",
+        "ssm:TerminateSession"
+      ],
+      "Resource": "arn:aws:ssm:*:859261896300:session/*"
+    }
+  ]
+}

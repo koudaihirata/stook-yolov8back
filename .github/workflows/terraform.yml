@@ -20,11 +20,14 @@ defaults:
     working-directory: ./
 
 env:
+  AWS_REGION: ap-northeast-3
+  AWS_ROLE_ARN: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:github-actions-credential/
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    environment: production
 
     strategy:
       matrix:
@@ -47,12 +50,11 @@ jobs:
           FILES: |
             ${{ matrix.site }}.lastupdate
 
-      - name: AWS credentials
+      - name: Configure AWS credentials from IAM Role
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-3
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - uses: aquaproj/aqua-installer@v3.0.1
         with:
