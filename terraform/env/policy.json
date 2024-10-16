@@ -24,11 +24,14 @@
         "ecr:CompleteLayerUpload",
         "ecr:DeleteRepository",
         "ecr:DeleteRepositoryPolicy",
-        "ecr:SetRepositoryPolicy"
+        "ecr:SetRepositoryPolicy",
+        "ecr:TagResource",
+        "ecr:UntagResource"
       ],
       "Resource": "arn:aws:ecr:*:859261896300:repository/*"
     },
     {
+      "Sid": "LambdaFunctions",
       "Effect": "Allow",
       "Action": [
         "lambda:CreateFunction",
@@ -36,33 +39,42 @@
         "lambda:InvokeFunction",
         "lambda:DeleteFunction",
         "lambda:UpdateFunctionConfiguration",
-        "lambda:ListFunctions"
+        "lambda:ListFunctions",
+        "lambda:TagResource",
+        "lambda:UntagResource"
       ],
       "Resource": "arn:aws:lambda:*:859261896300:function:*"
     },
     {
+      "Sid": "APIGateway",
       "Effect": "Allow",
       "Action": [
         "apigateway:GET",
         "apigateway:POST",
         "apigateway:PUT",
         "apigateway:DELETE",
-        "apigateway:PATCH"
+        "apigateway:PATCH",
+        "apigateway:TagResource",
+        "apigateway:UntagResource"
       ],
       "Resource": "arn:aws:apigateway:*::/restapis/*"
     },
     {
+      "Sid": "CloudWatchLogs",
       "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents",
         "logs:DescribeLogStreams",
-        "logs:DescribeLogGroups"
+        "logs:DescribeLogGroups",
+        "logs:TagResource",
+        "logs:UntagResource"
       ],
       "Resource": "arn:aws:logs:*:*:*"
     },
     {
+      "Sid": "IAMRolesAndPolicies",
       "Effect": "Allow",
       "Action": [
         "iam:CreateRole",
@@ -70,7 +82,10 @@
         "iam:DetachRolePolicy",
         "iam:PassRole",
         "iam:CreateOpenIDConnectProvider",
-        "iam:GetPolicy"
+        "iam:CreatePolicy",
+        "iam:GetPolicy",
+        "iam:TagRole",
+        "iam:UntagRole"
       ],
       "Resource": [
         "arn:aws:iam::859261896300:role/*",
@@ -79,6 +94,7 @@
       ]
     },
     {
+      "Sid": "Cloud9Environments",
       "Effect": "Allow",
       "Action": [
         "cloud9:CreateEnvironmentEC2",
@@ -95,16 +111,20 @@
       "Resource": "arn:aws:cloud9:*:859261896300:environment/*"
     },
     {
+      "Sid": "EC2Instances",
       "Effect": "Allow",
       "Action": [
         "ec2:DescribeInstances",
         "ec2:CreateTags",
         "ec2:DeleteTags",
-        "ec2:TerminateInstances"
+        "ec2:TerminateInstances",
+        "ec2:TagResource",
+        "ec2:UntagResource"
       ],
       "Resource": "*"
     },
     {
+      "Sid": "SSMSessions",
       "Effect": "Allow",
       "Action": [
         "ssm:DescribeSessions",
