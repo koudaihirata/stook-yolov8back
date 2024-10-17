@@ -18,7 +18,7 @@ env:
 
 jobs:
   pytest:
-    name: Execute pytest for lambda function
+    name: Execute unit and e2e tests for Flask app with YOLO
     runs-on: ubuntu-latest
     environment: test
 
@@ -33,22 +33,23 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pipenv
-          pipenv lock
-          pipenv sync --dev
+          pip install -r requirements.txt
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies for node
+      - name: Run Flask app in background
         run: |
-          yarn install --frozen-lockfile
+          nohup flask run --host=0.0.0.0 --port=5001 &
 
-      - name: Exec pytest
+      - name: Wait for Flask app to start
         run: |
-          pipenv run test
+          sleep 10
+
+      - name: Run unit tests
+        run: |
+          pytest tests/test_flask_app.py
+
+      - name: Run E2E tests
+        run: |
+          pytest tests/test_e2e.py
 
       - name: Pytest coverage comment
         if: always()
