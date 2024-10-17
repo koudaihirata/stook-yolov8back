@@ -53,9 +53,7 @@
         "apigateway:POST",
         "apigateway:PUT",
         "apigateway:DELETE",
-        "apigateway:PATCH",
-        "apigateway:TagResource",
-        "apigateway:UntagResource"
+        "apigateway:PATCH"
       ],
       "Resource": "arn:aws:apigateway:*::/restapis/*"
     },
@@ -81,7 +79,10 @@
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy",
         "iam:PassRole",
+        "iam:AddClientIDToOpenIDConnectProvider",
         "iam:CreateOpenIDConnectProvider",
+        "iam:GetOpenIDConnectProvider",
+        "iam:ListOpenIDConnectProviders",
         "iam:CreatePolicy",
         "iam:GetPolicy",
         "iam:TagRole",
@@ -117,9 +118,7 @@
         "ec2:DescribeInstances",
         "ec2:CreateTags",
         "ec2:DeleteTags",
-        "ec2:TerminateInstances",
-        "ec2:TagResource",
-        "ec2:UntagResource"
+        "ec2:TerminateInstances"
       ],
       "Resource": "*"
     },
