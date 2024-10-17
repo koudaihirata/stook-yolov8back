@@ -10,7 +10,7 @@ import numpy as np
 app = Flask(__name__)
 CORS(app)
 
-model = YOLO('yolov8n.pt')
+model = YOLO('models/yolov8n.pt')
 detected_objects = []
 
 def generate_frames():
