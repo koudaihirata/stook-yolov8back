@@ -3,7 +3,7 @@ FROM python:3.9-slim-buster AS builder
 ENV PYTHONUSERBASE=/app/__pypackages__
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential==12.6 \
+        build-essential=12.6 \
         libgl1-mesa-glx=18.3.6-2+deb10u1 \
         libglib2.0-0=2.58.3-2+deb10u6 \
     && rm -rf /var/lib/apt/lists/*
