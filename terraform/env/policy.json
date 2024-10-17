@@ -85,6 +85,7 @@
         "iam:ListOpenIDConnectProviders",
         "iam:CreatePolicy",
         "iam:GetPolicy",
+        "iam:GetPolicyVersion",
         "iam:TagRole",
         "iam:UntagRole"
       ],
